@@ -6,6 +6,10 @@ import (
 )
 
 const capacidad_inicial = 7
+const criterio_redimensionar = 0.7
+const criterio_reducir = 0.2
+const redimension = 2
+const reduccion = 4
 
 type claveValor[K comparable, V any] struct {
 	clave K
@@ -39,22 +43,86 @@ func CrearHash[K comparable, V any]() Diccionario[K, V] {
 	return hash
 }
 
+func (h *hashAbierto[K, V]) buscar(clave K) (TDALISTA.IteradorLista[claveValor[K, V]], bool) {
+	pertenece := false
+
+	indice := int(funcionDeHashing(convertirABytes[K](clave))) % h.capacidad
+	lista := h.arreglo_listas[indice]
+	iter_lista := lista.Iterador()
+
+	for iter_lista.HaySiguiente() {
+		actual := iter_lista.VerActual().clave
+		if actual == clave {
+			pertenece = true
+			break
+		}
+		iter_lista.Siguiente()
+	}
+	return iter_lista, pertenece
+}
+
+func (h *hashAbierto[K, V]) redimensionar(nueva_cap int) {
+	h.capacidad = nueva_cap
+	nueva_tabla := make([]TDALISTA.Lista[claveValor[K, V]], h.capacidad)
+
+	for i := 0; i < h.capacidad; i++ {
+		nueva_tabla[i] = TDALISTA.CrearListaEnlazada[claveValor[K, V]]()
+
+	}
+	//copiar la tabla vieja en la nueva
+	//asignar la nueva a la vieja
+}
+
 func (h *hashAbierto[K, V]) Guardar(clave K, dato V) {
 	h.tamanio++
 
+	//LOGICA REDIMENSION
+	//factor_carga := h.tamanio % h.capacidad
+	//if factor_carga >= criterio_redimensionar{
+	// h.redimensionar(h.capacidad * redimension)
+	//}
+
+	iter, pertenece := h.buscar(clave)
+
+	if pertenece {
+		actual := iter.VerActual()
+		actual.valor = dato
+	} else {
+		iter.Insertar(claveValor[K, V]{clave, dato})
+	}
 }
 
 func (h *hashAbierto[K, V]) Pertenece(clave K) bool {
-
-	return false
+	_, pertenece := h.buscar(clave)
+	return pertenece
 }
 
 func (h *hashAbierto[K, V]) Obtener(clave K) V {
-	var valor V
-	return valor
+	if !h.Pertenece(clave) {
+		panic("La clave no pertenece al diccionario")
+	}
+	iter, _ := h.buscar(clave)
+
+	return iter.VerActual().valor
 }
 
-func (h *hashAbierto[K, V]) Borrar(clave K) V
+func (h *hashAbierto[K, V]) Borrar(clave K) V {
+	if !h.Pertenece(clave) {
+		panic("La clave no pertenece al diccionario")
+	}
+	iter, _ := h.buscar(clave)
+
+	borrado := iter.Borrar().valor
+
+	h.tamanio--
+
+	// factor_carga:= h.tamanio % h.capacidad
+	// if factor_carga <= criterio_reduccion{
+	// h.redimensionar(h.capacidad/reduccion)
+	}
+
+	return borrado
+}
 
 func (h *hashAbierto[K, V]) Cantidad() int {
 	return h.tamanio
@@ -63,10 +131,12 @@ func (h *hashAbierto[K, V]) Cantidad() int {
 func (h *hashAbierto[K, V]) Iterar(func(clave K, dato V) bool)
 
 func (h *hashAbierto[K, V]) Iterador() IterDiccionario[K, V] {
-	//return &iteradorDiccionario{
-	//	hash : h,
-	//	actual :nil,
-	//}
+	return &iteradorDiccionario[K, V]{
+		hash:   h,
+		actual: nil,
+		indice: 0,
+		lista:  nil,
+	}
 }
 
 func (iter *iteradorDiccionario[K, V]) HaySiguiente() bool {
