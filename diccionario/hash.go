@@ -7,8 +7,8 @@ import (
 
 const (
 	capacidad_inicial      = 7
-	criterio_redimensionar = 0.7
-	criterio_reducir       = 0.2
+	criterio_redimensionar = 3
+	criterio_reducir       = 2
 	redimension            = 2
 )
 
@@ -25,7 +25,6 @@ type hashAbierto[K comparable, V any] struct {
 
 type iteradorDiccionario[K comparable, V any] struct {
 	hash   *hashAbierto[K, V]
-	actual *claveValor[K, V]
 	indice int
 	lista  TDALISTA.IteradorLista[*claveValor[K, V]]
 }
@@ -37,11 +36,14 @@ func CrearHash[K comparable, V any]() Diccionario[K, V] {
 		arreglo_listas: make([]TDALISTA.Lista[*claveValor[K, V]], capacidad_inicial),
 	}
 
-	for i := 0; i < capacidad_inicial; i++ {
-		hash.arreglo_listas[i] = TDALISTA.CrearListaEnlazada[*claveValor[K, V]]()
-	}
+	crear_tabla(&hash.arreglo_listas)
 
 	return hash
+}
+func crear_tabla[K comparable, V any](arreglo *[]TDALISTA.Lista[*claveValor[K, V]]) {
+	for i := 0; i < len(*arreglo); i++ {
+		(*arreglo)[i] = TDALISTA.CrearListaEnlazada[*claveValor[K, V]]()
+	}
 }
 
 func (h *hashAbierto[K, V]) buscar(clave K) (TDALISTA.IteradorLista[*claveValor[K, V]], bool) {
@@ -66,9 +68,8 @@ func (h *hashAbierto[K, V]) redimensionar(nueva_cap int) {
 	h.capacidad = nueva_cap
 	nueva_tabla := make([]TDALISTA.Lista[*claveValor[K, V]], h.capacidad)
 
-	for i := 0; i < h.capacidad; i++ {
-		nueva_tabla[i] = TDALISTA.CrearListaEnlazada[*claveValor[K, V]]()
-	}
+	crear_tabla(&nueva_tabla)
+
 	for _, lista := range h.arreglo_listas {
 		iterador := lista.Iterador()
 		for iterador.HaySiguiente() {
@@ -81,25 +82,30 @@ func (h *hashAbierto[K, V]) redimensionar(nueva_cap int) {
 	h.arreglo_listas = nueva_tabla
 }
 
-func (h hashAbierto[K, V]) indicePosicionNoVacia(pos int) int {
-	if pos > h.capacidad {
-		return pos
-	}
-	indice := pos
-	for i := range h.arreglo_listas {
-		if i <= pos {
-			continue
-		}
-		if !h.arreglo_listas[i].EstaVacia() {
+func (iter *iteradorDiccionario[K, V]) indicePosicionNoVacia(pos int) {
+	var indice int
+	encontrado := false
+	for i := pos; i < iter.hash.capacidad; i++ {
+		if !iter.hash.arreglo_listas[i].EstaVacia() {
 			indice = i
+			encontrado = true
+			break
 		}
 	}
-	return indice
+
+	if !encontrado {
+		iter.lista = nil
+	} else {
+
+		iter.indice = indice
+		iter.lista = iter.hash.arreglo_listas[indice].Iterador()
+	}
+
 }
 
 func (h *hashAbierto[K, V]) Guardar(clave K, dato V) {
 	//LOGICA REDIMENSION
-	factor_carga := float32(h.tamanio / h.capacidad)
+	factor_carga := h.tamanio / h.capacidad
 	if factor_carga >= criterio_redimensionar {
 		h.redimensionar(h.capacidad * redimension)
 	}
@@ -121,25 +127,27 @@ func (h *hashAbierto[K, V]) Pertenece(clave K) bool {
 }
 
 func (h *hashAbierto[K, V]) Obtener(clave K) V {
-	if !h.Pertenece(clave) {
+	iter, pertenece := h.buscar(clave)
+	if !pertenece {
 		panic("La clave no pertenece al diccionario")
 	}
-	iter, _ := h.buscar(clave)
 
 	return iter.VerActual().valor
 }
 
 func (h *hashAbierto[K, V]) Borrar(clave K) V {
-	if !h.Pertenece(clave) {
+
+	iter, pertenece := h.buscar(clave)
+
+	if !pertenece {
 		panic("La clave no pertenece al diccionario")
 	}
-	iter, _ := h.buscar(clave)
 
 	borrado := iter.Borrar().valor
 
 	h.tamanio--
 
-	factor_carga := float32(h.tamanio / h.capacidad)
+	factor_carga := h.tamanio / h.capacidad
 	if factor_carga <= criterio_reducir && h.capacidad > capacidad_inicial {
 		h.redimensionar(h.capacidad / redimension)
 	}
@@ -153,17 +161,15 @@ func (h *hashAbierto[K, V]) Cantidad() int {
 
 func (h *hashAbierto[K, V]) Iterar(f func(clave K, dato V) bool) {
 	for _, lista := range h.arreglo_listas {
-		if lista.EstaVacia() {
-			continue
-		}
+
 		iter := lista.Iterador()
 		for iter.HaySiguiente() {
 			actual := iter.VerActual()
 			if !f(actual.clave, actual.valor) {
 				return
-			} else {
-				iter.Siguiente()
 			}
+			iter.Siguiente()
+
 		}
 	}
 }
@@ -171,55 +177,36 @@ func (h *hashAbierto[K, V]) Iterar(f func(clave K, dato V) bool) {
 func (h *hashAbierto[K, V]) Iterador() IterDiccionario[K, V] {
 	iter := &iteradorDiccionario[K, V]{
 		hash:   h,
-		actual: nil,
 		indice: 0,
 		lista:  nil,
 	}
-	/*
-		indice := h.indicePosicionNoVacia(-1)
-		if indice == -1 {
-			return iter
-		}
-		iter.actual = h.arreglo_listas[indice].VerPrimero()
-		iter.lista = h.arreglo_listas
+	iter.indicePosicionNoVacia(iter.indice)
 
-
-	*/
 	return iter
 }
 
 func (iter *iteradorDiccionario[K, V]) HaySiguiente() bool {
-	return iter.actual != nil
+	return (iter.lista != nil && iter.lista.HaySiguiente()) || (iter.indice+1 < iter.hash.capacidad && !iter.hash.arreglo_listas[iter.indice+1].EstaVacia())
 }
 
 func (iter *iteradorDiccionario[K, V]) VerActual() (K, V) {
 	if !iter.HaySiguiente() {
 		panic("El iterador termino de iterar")
 	}
-	return iter.actual.clave, iter.actual.valor
+	actual := iter.lista.VerActual()
+	return actual.clave, actual.valor
 }
 
 func (iter *iteradorDiccionario[K, V]) Siguiente() {
-
 	if !iter.HaySiguiente() {
 		panic("El iterador termino de iterar")
 	}
 
-	if iter.lista != nil {
-		iter.lista.Siguiente()
-		if iter.lista.HaySiguiente() && iter.indice < iter.hash.tamanio {
-			iter.indice++
-			iter.lista = iter.hash.arreglo_listas[iter.indice].Iterador()
-		}
+	iter.lista.Siguiente()
 
-	} else if iter.indice < iter.hash.tamanio {
-		iter.indice++
-		iter.lista = iter.hash.arreglo_listas[iter.indice].Iterador()
-		if !iter.lista.HaySiguiente() {
-			iter.Siguiente()
-		}
-	} else {
-		iter.lista = nil
+	if !iter.lista.HaySiguiente() {
+		iter.indicePosicionNoVacia(iter.indice + 1)
+
 	}
 
 }
@@ -228,19 +215,17 @@ func convertirABytes[K comparable](clave K) []byte {
 	return []byte(fmt.Sprintf("%v", clave))
 }
 
+// funcion de hashing de jenkins que obtuvimos de internet
 func funcionDeHashing(data []byte) uint32 {
-	/*var hash uint32
-	for _, b := range data {
-		hash = uint32(b) + ((hash << 5) - hash)
+	var hash uint32
+	for _, c := range data {
+		hash += uint32(c)
+		hash += (hash << 10)
+		hash ^= (hash >> 6)
 	}
+	hash += (hash << 3)
+	hash ^= (hash >> 11)
+	hash += (hash << 15)
 	return hash
-	*/
 
-	var hash uint32 = 5381
-
-	for _, char := range data {
-		hash = (hash << 5) + hash + uint32(char)
-	}
-
-	return hash
 }
