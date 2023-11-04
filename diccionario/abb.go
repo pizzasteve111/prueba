@@ -47,12 +47,12 @@ func (a *abb[K, V]) wrapper_buscar(clave K, nodo *nodo[K, V], padre *nodo[K, V])
 	}
 	comparado := a.comparacion(clave, nodo.clave)
 
-	if comparado == 0 {
-		return nodo, padre
+	if comparado > 0 {
+		return a.wrapper_buscar(clave, nodo.hijo_der, nodo)
 	} else if comparado < 0 {
 		return a.wrapper_buscar(clave, nodo.hijo_izq, nodo)
 	} else {
-		return a.wrapper_buscar(clave, nodo.hijo_der, nodo)
+		return nodo, padre
 	}
 }
 
@@ -100,10 +100,15 @@ func contarHijos[K comparable, V any](nodo *nodo[K, V]) int {
 	return cont
 }
 func (n *nodo[K, V]) reemplazante() *nodo[K, V] {
-	for n.hijo_izq != nil {
-		n = n.hijo_der
+
+	return n.wrapper_reemplazante()
+}
+
+func (n *nodo[K, V]) wrapper_reemplazante() *nodo[K, V] {
+	if n.hijo_der == nil {
+		return n
 	}
-	return n
+	return n.hijo_der.wrapper_reemplazante()
 }
 
 func (a *abb[K, V]) Borrar(clave K) V {
