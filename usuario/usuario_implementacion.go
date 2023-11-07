@@ -69,5 +69,3 @@ func (u *usuarioImp) Likear(id int, arr []Post) error {
 	post.AsignarLikes(u.nombre)
 	return nil
 }
-
-//holis

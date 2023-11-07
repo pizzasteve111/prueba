@@ -8,3 +8,5 @@ type Post interface {
 	//Imprime el estado actual del post.
 	ImprimirPost()
 }
+
+//que
