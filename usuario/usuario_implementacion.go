@@ -88,6 +88,7 @@ func (u *usuarioImp) PublicarPost(mensaje string, usuarios_logueados []Usuario, 
 			usuario.encolarPost(post)
 		}
 	}
+	arr = append(arr, post)
 	return nil
 }
 
