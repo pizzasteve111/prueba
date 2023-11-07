@@ -18,9 +18,9 @@ type Usuario interface {
 	//Se encarga de avanzar en el feed, segun la afinidad de los usuarios que hayan publicando posts; en caso que dos posts
 	//tengan sendos usuarios con misma afinidad al loggeado , se debe visualizar el post que primero se haya creado.
 	//Si todo se ejecuta correctamente devuelve nil y el post, caso contrario error pertinente
-	VerFeed() (error, int)
+	VerFeed() (Post, error)
 
 	//El usuario crea un post que se asigna al feed del resto de los usuarios,
 	//en caso de no estar logueado, se devuelve el error pertinente.
-	PublicarPost([]Usuario) error
+	PublicarPost(string, []Usuario, []Post) error
 }

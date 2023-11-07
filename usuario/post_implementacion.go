@@ -9,7 +9,7 @@ import (
 type postImp struct {
 	id      int
 	likes   TDAdic.DiccionarioOrdenado[string, int]
-	creador string
+	creador Usuario
 	mensaje string
 }
 
@@ -23,11 +23,11 @@ func cmp(a, b string) int {
 	}
 }
 
-func CrearPost(texto, nombre_usuario string, arr []Post) Post {
+func CrearPost(texto string, user Usuario, arr []Post) Post {
 	return &postImp{
 		id:      len(arr),
 		likes:   TDAdic.CrearABB[string, int](cmp),
-		creador: nombre_usuario,
+		creador: user,
 		mensaje: texto,
 	}
 }
@@ -40,6 +40,10 @@ func (p *postImp) AsignarLikes(nombre_usuario string) {
 
 func (p postImp) ImprimirPost() {
 	fmt.Println("Post ID " + strconv.Itoa(p.id))
-	fmt.Println(p.creador + " dijo: " + p.mensaje)
+	fmt.Println(p.creador.ObtenerNombre() + " dijo: " + p.mensaje)
 	fmt.Println("Likes: " + strconv.Itoa(p.likes.Cantidad()))
+}
+
+func (p postImp) ObtenerCreador() Usuario {
+	return p.creador
 }
