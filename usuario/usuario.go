@@ -22,8 +22,10 @@ type Usuario interface {
 
 	//El usuario crea un post que se asigna al feed del resto de los usuarios,
 	//en caso de no estar logueado, se devuelve el error pertinente.
-	PublicarPost(string, []Usuario, []Post) error
+	PublicarPost(string, []Usuario, []Post) (Post, error)
 
 	//Devuelve la posicion del usuario en el archivo de entrada.
 	ObtenerPos() int
+
+	Deslogearse() error
 }

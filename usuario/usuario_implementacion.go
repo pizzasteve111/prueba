@@ -59,10 +59,23 @@ func (u usuarioImp) ObtenerNombre() string {
 }
 
 func (u *usuarioImp) Logearse(dicc TDAdic.Diccionario[string, int]) error {
+
 	if !dicc.Pertenece(u.nombre) {
 		return err.UsarioInexistente{}
 	}
+	if u.EstaLogeado() {
+		return err.YaLogueado{}
+	}
+
 	u.logueado = true
+	return nil
+}
+
+func (u *usuarioImp) Deslogearse() error {
+	if !u.logueado {
+		return err.NoLogueado{}
+	}
+	u.logueado = false
 	return nil
 }
 
@@ -78,18 +91,17 @@ func (u *usuarioImp) encolarPost(post Post) {
 	u.posts.Encolar(post)
 }
 
-func (u *usuarioImp) PublicarPost(mensaje string, usuarios_logueados []Usuario, arr []Post) error {
+func (u *usuarioImp) PublicarPost(mensaje string, usuarios_logueados []Usuario, arr []Post) (Post, error) {
 	if !u.EstaLogeado() {
-		return err.NoLogueado{}
+		return nil, err.NoLogueado{}
 	}
 	post := CrearPost(mensaje, u, arr)
 	for _, usuario := range usuarios_logueados {
 		if u.nombre != usuario.ObtenerNombre() {
-			usuario.encolarPost(post)
+			usuario.(*usuarioImp).encolarPost(post)
 		}
 	}
-	arr = append(arr, post)
-	return nil
+	return post, nil
 }
 
 func (u *usuarioImp) Likear(id int, arr []Post) error {
