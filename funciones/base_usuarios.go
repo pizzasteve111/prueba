@@ -102,4 +102,10 @@ func ComandoLikear(entrada []string, fila TDAcola.Cola[TDAuser.Usuario], arr_pos
 	if err != nil {
 		return errores.ErrorParametros{}
 	}
+	err2 := usuario.Likear(id, arr_post)
+
+	if err2 != nil {
+		return err
+	}
+	return nil
 }
