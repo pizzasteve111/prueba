@@ -3,6 +3,7 @@ package funciones
 import (
 	"bufio"
 	"os"
+	"strconv"
 	"strings"
 	TDAcola "tdas/cola"
 	TDAdic "tdas/diccionario"
@@ -87,4 +88,18 @@ func ComandoPublicar(entrada []string, fila TDAcola.Cola[TDAuser.Usuario], arr_u
 	}
 
 	return post, nil
+}
+
+func ComandoLikear(entrada []string, fila TDAcola.Cola[TDAuser.Usuario], arr_post []TDAuser.Post) error {
+	if len(entrada) != 2 {
+		return errores.ErrorParametros{}
+	}
+	if fila.EstaVacia() {
+		return errores.NoLogueado{}
+	}
+	usuario := fila.VerPrimero()
+	id, err := strconv.Atoi(entrada[1])
+	if err != nil {
+		return errores.ErrorParametros{}
+	}
 }

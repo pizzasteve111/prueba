@@ -28,4 +28,6 @@ type Usuario interface {
 	ObtenerPos() int
 
 	Deslogearse() error
+
+	Likear(int, []Post) error
 }
