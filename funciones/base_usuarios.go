@@ -109,3 +109,42 @@ func ComandoLikear(entrada []string, fila TDAcola.Cola[TDAuser.Usuario], arr_pos
 	}
 	return nil
 }
+
+func ComandoVerFeed(entrada []string, fila TDAcola.Cola[TDAuser.Usuario]) (TDAuser.Post, error) {
+	if len(entrada) != 1 || entrada[0] != "ver_siguiente_feed" {
+		return nil, errores.ErrorParametros{}
+	}
+
+	if fila.EstaVacia() {
+		return nil, errores.NoLogueado{}
+	}
+
+	usuario := fila.VerPrimero()
+	post, err := usuario.VerFeed()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return post, nil
+}
+
+func ComandoVerLikes(entrada []string, arr_posts []TDAuser.Post) error {
+	if len(entrada) != 2 || entrada[0] != "mostrar_likes" {
+		return errores.ErrorParametros{}
+	}
+
+	id, err := strconv.Atoi(entrada[1])
+	if err != nil {
+		return errores.ErrorParametros{}
+	}
+
+	if id < 0 || len(arr_posts) <= id {
+		return errores.PostInexistente{}
+	}
+
+	post := arr_posts[id]
+	post.ImprimirPost()
+	return nil
+
+}
