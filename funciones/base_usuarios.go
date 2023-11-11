@@ -129,22 +129,22 @@ func ComandoVerFeed(entrada []string, fila TDAcola.Cola[TDAuser.Usuario]) (TDAus
 	return post, nil
 }
 
-func ComandoVerLikes(entrada []string, arr_posts []TDAuser.Post) error {
+func ComandoVerLikes(entrada []string, arr_posts []TDAuser.Post) (TDAuser.Post, error) {
 	if len(entrada) != 2 || entrada[0] != "mostrar_likes" {
-		return errores.ErrorParametros{}
+		return nil, errores.ErrorParametros{}
 	}
 
 	id, err := strconv.Atoi(entrada[1])
 	if err != nil {
-		return errores.ErrorParametros{}
+		return nil, errores.ErrorParametros{}
 	}
 
 	if id < 0 || len(arr_posts) <= id {
-		return errores.PostInexistente{}
+		return nil, errores.PostInexistente{}
 	}
 
 	post := arr_posts[id]
-	post.ImprimirPost()
-	return nil
+
+	return post, nil
 
 }

@@ -27,7 +27,9 @@ type Usuario interface {
 	//Devuelve la posicion del usuario en el archivo de entrada.
 	ObtenerPos() int
 
+	//Cambia el estado del usuario y lo deslogea, devuelve error en caso de que no este logueado
 	Deslogearse() error
 
+	//Recibe el id y el arreglo de post, le asigna el like. En caso de error, lo devuelve.
 	Likear(int, []Post) error
 }

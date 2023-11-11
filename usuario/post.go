@@ -8,5 +8,9 @@ type Post interface {
 	//Imprime el estado actual del post.
 	ImprimirPost()
 
+	//Devuelve al creador del Post
 	ObtenerCreador() Usuario
+
+	//Muestra los likes asignados al post.
+	MostrarLikes()
 }

@@ -2,6 +2,7 @@ package usuario
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	TDAdic "tdas/diccionario"
 )
@@ -39,9 +40,20 @@ func (p *postImp) AsignarLikes(nombre_usuario string) {
 }
 
 func (p postImp) ImprimirPost() {
-	fmt.Println("Post ID " + strconv.Itoa(p.id))
-	fmt.Println(p.creador.ObtenerNombre() + " dijo: " + p.mensaje)
-	fmt.Println("Likes: " + strconv.Itoa(p.likes.Cantidad()))
+	fmt.Fprintln(os.Stdout, "Post ID "+strconv.Itoa(p.id))
+	fmt.Fprintln(os.Stdout, p.creador.ObtenerNombre()+" dijo: "+p.mensaje)
+	fmt.Fprintln(os.Stdout, "Likes: "+strconv.Itoa(p.likes.Cantidad()))
+}
+
+func (p postImp) MostrarLikes() {
+	cant_likes := strconv.Itoa(p.likes.Cantidad())
+	fmt.Fprintln(os.Stdout, "El post tiene "+cant_likes+" likes:")
+
+	for iter := p.likes.Iterador(); iter.HaySiguiente(); iter.Siguiente() {
+		usuario, _ := iter.VerActual()
+		fmt.Fprintln(os.Stdout, usuario)
+	}
+
 }
 
 func (p postImp) ObtenerCreador() Usuario {
