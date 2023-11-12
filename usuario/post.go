@@ -11,6 +11,6 @@ type Post interface {
 	//Devuelve al creador del Post
 	ObtenerCreador() Usuario
 
-	//Muestra los likes asignados al post.
-	MostrarLikes()
+	//Muestra los likes asignados al post, devuelve error si el post no existe o no tiene likes.
+	MostrarLikes() error
 }

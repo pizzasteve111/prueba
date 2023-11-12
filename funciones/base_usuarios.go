@@ -2,6 +2,7 @@ package funciones
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -11,15 +12,16 @@ import (
 	TDAuser "tp2/usuario"
 )
 
-func LeerArchivo(ruta string, arr []TDAuser.Usuario) (TDAdic.Diccionario[string, int], error) {
+func LeerArchivo(ruta string) ([]TDAuser.Usuario, TDAdic.Diccionario[string, int], error) {
 	archivo, err := os.Open(ruta)
 	if err != nil {
-		return nil, errores.ErrorLeerArchivo{}
+		return nil, nil, errores.ErrorLeerArchivo{}
 	}
+	arr := []TDAuser.Usuario{}
 
 	lector := bufio.NewScanner(archivo)
 	dicc := TDAdic.CrearHash[string, int]()
-	cont := 1
+	cont := 0
 	for lector.Scan() {
 		linea := lector.Text()
 		usuario := TDAuser.CrearUsuario(linea, cont)
@@ -27,7 +29,14 @@ func LeerArchivo(ruta string, arr []TDAuser.Usuario) (TDAdic.Diccionario[string,
 		arr = append(arr, usuario)
 		cont++
 	}
-	return dicc, nil
+	for iter := dicc.Iterador(); iter.HaySiguiente(); iter.Siguiente() {
+		prueba, prueba2 := iter.VerActual()
+
+		prueba2str := strconv.Itoa(prueba2)
+		fmt.Fprintln(os.Stdout, prueba+"/"+prueba2str)
+	}
+
+	return arr, dicc, nil
 }
 
 func ComandoLogin(entrada []string, dicc_usuarios TDAdic.Diccionario[string, int], arr []TDAuser.Usuario, fila TDAcola.Cola[TDAuser.Usuario]) error {
@@ -42,7 +51,7 @@ func ComandoLogin(entrada []string, dicc_usuarios TDAdic.Diccionario[string, int
 		return errores.YaLogueado{}
 	}
 	pos_usuario := dicc_usuarios.Obtener(nombre_usuario)
-	usuario := arr[pos_usuario-1]
+	usuario := arr[pos_usuario]
 
 	err := usuario.Logearse(dicc_usuarios)
 
@@ -102,10 +111,11 @@ func ComandoLikear(entrada []string, fila TDAcola.Cola[TDAuser.Usuario], arr_pos
 	if err != nil {
 		return errores.ErrorParametros{}
 	}
+
 	err2 := usuario.Likear(id, arr_post)
 
 	if err2 != nil {
-		return err
+		return err2
 	}
 	return nil
 }
@@ -116,7 +126,7 @@ func ComandoVerFeed(entrada []string, fila TDAcola.Cola[TDAuser.Usuario]) (TDAus
 	}
 
 	if fila.EstaVacia() {
-		return nil, errores.NoLogueado{}
+		return nil, errores.NoHayMasPost{}
 	}
 
 	usuario := fila.VerPrimero()
@@ -139,9 +149,11 @@ func ComandoVerLikes(entrada []string, arr_posts []TDAuser.Post) (TDAuser.Post, 
 		return nil, errores.ErrorParametros{}
 	}
 
-	if id < 0 || len(arr_posts) <= id {
-		return nil, errores.PostInexistente{}
-	}
+	/*
+		if id < 0 || len(arr_posts) <= id {
+			return nil, errores.PostInexistente{}
+		}
+	*/
 
 	post := arr_posts[id]
 

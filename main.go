@@ -23,11 +23,9 @@ func main() {
 
 	fila := TDAcola.CrearColaEnlazada[TDAuser.Usuario]()
 	arr_post := []TDAuser.Post{}
-	arr_usuarios := []TDAuser.Usuario{}
-
 	ruta_archivo := parametros[0]
 
-	dicc_usuarios, err1 := archivos.LeerArchivo(ruta_archivo, arr_usuarios)
+	arr_usuarios, dicc_usuarios, err1 := archivos.LeerArchivo(ruta_archivo)
 	if err1 != nil {
 		err1_string := err1.Error()
 		fmt.Fprintln(os.Stdout, err1_string)
@@ -69,6 +67,7 @@ func main() {
 				fmt.Fprintln(os.Stdout, err_string)
 				continue
 			}
+
 			arr_post = append(arr_post, post)
 			fmt.Fprintln(os.Stdout, "Post publicado")
 
@@ -96,7 +95,12 @@ func main() {
 				fmt.Fprintln(os.Stdout, err_string)
 				continue
 			}
-			post.MostrarLikes()
+			err2 := post.MostrarLikes()
+			if err2 != nil {
+				err2_string := err2.Error()
+				fmt.Fprintln(os.Stdout, err2_string)
+				continue
+			}
 
 		}
 

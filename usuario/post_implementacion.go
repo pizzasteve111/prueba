@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	TDAdic "tdas/diccionario"
+	errores "tp2/errores"
 )
 
 type postImp struct {
@@ -45,8 +46,11 @@ func (p postImp) ImprimirPost() {
 	fmt.Fprintln(os.Stdout, "Likes: "+strconv.Itoa(p.likes.Cantidad()))
 }
 
-func (p postImp) MostrarLikes() {
+func (p postImp) MostrarLikes() error {
 	cant_likes := strconv.Itoa(p.likes.Cantidad())
+	if p.likes.Cantidad() == 0 {
+		return errores.PostInexistente{}
+	}
 	fmt.Fprintln(os.Stdout, "El post tiene "+cant_likes+" likes:")
 
 	for iter := p.likes.Iterador(); iter.HaySiguiente(); iter.Siguiente() {
@@ -54,6 +58,7 @@ func (p postImp) MostrarLikes() {
 		fmt.Fprintln(os.Stdout, usuario)
 	}
 
+	return nil
 }
 
 func (p postImp) ObtenerCreador() Usuario {

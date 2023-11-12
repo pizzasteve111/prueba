@@ -28,9 +28,9 @@ func (u usuarioImp) cmp(post1, post2 Post) int {
 	afinidad2 := calcularDistancia(u, post2.ObtenerCreador())
 
 	if afinidad1 > afinidad2 {
-		return 1
-	} else if afinidad1 < afinidad2 {
 		return -1
+	} else if afinidad1 < afinidad2 {
+		return 1
 	}
 	return 0
 }
@@ -105,8 +105,11 @@ func (u *usuarioImp) PublicarPost(mensaje string, usuarios_logueados []Usuario, 
 }
 
 func (u *usuarioImp) Likear(id int, arr []Post) error {
-	if u.posts.EstaVacia() || !u.EstaLogeado() {
-		return err.SinPostsParaVer{}
+	if !u.EstaLogeado() {
+		return err.NoLogueado{}
+	}
+	if id < 0 || id > len(arr) {
+		return err.PostInexistente{}
 	}
 	post := arr[id]
 	post.AsignarLikes(u.nombre)

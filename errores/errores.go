@@ -42,3 +42,9 @@ type PostInexistente struct{}
 func (e PostInexistente) Error() string {
 	return "Error: Post inexistente o sin likes"
 }
+
+type NoHayMasPost struct{}
+
+func (e NoHayMasPost) Error() string {
+	return "Usuario no loggeado o no hay mas posts para ver"
+}
