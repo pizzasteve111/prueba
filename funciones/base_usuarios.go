@@ -29,12 +29,8 @@ func LeerArchivo(ruta string) ([]TDAuser.Usuario, TDAdic.Diccionario[string, int
 		arr = append(arr, usuario)
 		cont++
 	}
-	for iter := dicc.Iterador(); iter.HaySiguiente(); iter.Siguiente() {
-		prueba, prueba2 := iter.VerActual()
 
-		prueba2str := strconv.Itoa(prueba2)
-		fmt.Fprintln(os.Stdout, prueba+"/"+prueba2str)
-	}
+	fmt.Fprintln(os.Stdout, dicc.Pertenece("alan"))
 
 	return arr, dicc, nil
 }
@@ -149,11 +145,9 @@ func ComandoVerLikes(entrada []string, arr_posts []TDAuser.Post) (TDAuser.Post, 
 		return nil, errores.ErrorParametros{}
 	}
 
-	/*
-		if id < 0 || len(arr_posts) <= id {
-			return nil, errores.PostInexistente{}
-		}
-	*/
+	if id < 0 || len(arr_posts) <= id {
+		return nil, errores.PostInexistente{}
+	}
 
 	post := arr_posts[id]
 
