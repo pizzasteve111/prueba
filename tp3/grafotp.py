@@ -63,12 +63,8 @@ class Grafo:
         return True
 
     def peso_arista(self,v,w):
-        if v not in self.vertices or w not in self.vertices:
-            raise ValueError(f"vertice/s no esta en el grafo")
-        
-        if w not in self.obtener_vertices[v]:
-            raise ValueError(f"Arista inexistente en el grafo")
-        
+        if not self.estan_unidos(v,w):
+            raise ValueError(f"v no tiene como adyacente a w; o no existen en el grafo")
         return self.vertices[v][w]
     
     def vertice_aleatorio(self):
@@ -80,3 +76,15 @@ class Grafo:
         for w in self.vertices[v].keys():
             res.append(w)
         return res
+    
+    def aristas(self):
+        visitados = set()
+        aristas = []
+        for v in self.vertices.keys():
+            if v not in visitados:
+                visitados.add(v)
+            for w in  self.vertices.values():
+                if w not in visitados:
+                    aristas.append((v,w,self.peso_arista(v,w)))
+                visitados.add(w)
+        return aristas
