@@ -16,8 +16,10 @@ def conectividad(grafo : Grafo, pagina):
     return []        
 
 def camino(grafo: Grafo,origen,destino):
-    camino = biblioteca.camino_min_dfs(grafo,origen,destino)
-    return camino, len(camino)-1
+    camino = biblioteca.camino_min(grafo,origen,destino)
+    if not camino:
+        return None
+    return camino
 
 def diametro(grafo:Grafo):
     maximo = -1
@@ -58,20 +60,24 @@ def navegacion(grafo : Grafo, origen):
     return paginas
 
 def lectura(grafo:Grafo,links):
+    set_links=set()
+    for link in links:
+        set_links.add(link)
+
     cola = deque()
-    g_sal = biblioteca.grados_salida(grafo)
+    g_sal = biblioteca.grados_salida(grafo,set_links)
     orden = []
     for v in links:
         if g_sal[v] == 0:
             cola.append(v)
 
-    entradas = biblioteca.obtener_entaradas_vertice(grafo)
+    entradas = biblioteca.obtener_entradas_vertice_lect(grafo,set_links)
 
     while len(cola) > 0:
         v = cola.popleft()
         orden.append(v)
         for w in entradas[v]:
-            if w in links:
+            if w in set_links:
                 g_sal[w]-=1
                 if g_sal[w]==0:
                     cola.append(w)
@@ -98,11 +104,11 @@ def clustering(grafo: Grafo, pagina = None):
         return (format(coef,'.3f'))
 
     else:
-        coef_total = float(0)
+        coef_total = 0
         for v in grafo.obtener_vertices():  
             adyacentes = grafo.adyacentes(v)
             if len(adyacentes) < 2:
-                return format(0,'.3f')
+                continue
         
             aristas_ady = 0
     
@@ -117,28 +123,11 @@ def clustering(grafo: Grafo, pagina = None):
 
 
 def ciclos(grafo : Grafo, n , pagina):
+    sys.setrecursionlimit(75000)
     visitados = set()
     res = []
-    return dfs_ciclos(grafo,visitados,pagina,pagina,res,n)
+    return biblioteca.dfs_ciclos(grafo,visitados,pagina,pagina,res,n)
     
-
-def dfs_ciclos(grafo: Grafo, visitados,v,pagina,res,n):
-    sys.setrecursionlimit(75000)
-    visitados.add(v)
-    res.append(v)
-
-    if len(res)==n and res[-1]==pagina:
-        return res
-    
-    for w in grafo.adyacentes(v):
-        if w not in visitados:
-            resp = dfs_ciclos(grafo,visitados,w,pagina,res,n)
-            if resp:
-                return resp
-            
-    res.pop()
-    visitados.remove(v)
-    return None
 
 def comunidades(grafo:Grafo,pagina):
     comunidades = biblioteca.label_propagation(grafo)
@@ -148,20 +137,29 @@ def comunidades(grafo:Grafo,pagina):
         
 
 def mas_importantes(grafo: Grafo,n):
-    page_ranks = biblioteca.pagerank(grafo)
+    N = len(grafo.obtener_vertices())
+    page_rank = {}
+
+    for v in grafo.obtener_vertices():
+        page_rank[v]=1/N
+
+    g_sal = biblioteca.grados_salida(grafo)
+    corte = True
+    while corte:
+        corte = biblioteca.pagerank(grafo,N,page_rank,g_sal)
+
     heap_min = []
     mas_imp = []
     i = 0
-
     for v in grafo.obtener_vertices():
 
         if i < n:
-            heapq.heappush(heap_min,(page_ranks[v],v))
+            heapq.heappush(heap_min,(page_rank[v],v))
             i+=1
         else:
-            if page_ranks[v]> heap_min[0][0]:
+            if page_rank[v]> heap_min[0][0]:
                 heapq.heappop(heap_min)
-                heapq.heappush(heap_min,(page_ranks[v],v))
+                heapq.heappush(heap_min,(page_rank[v],v))
     
     for i in range(n):
         mas_imp.append(heapq.heappop(heap_min)[1])
@@ -169,6 +167,3 @@ def mas_importantes(grafo: Grafo,n):
     return mas_imp[::-1]
 
 
-def mostrar_comandos():
-    return 
-    

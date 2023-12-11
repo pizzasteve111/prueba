@@ -13,13 +13,19 @@ def grados_entrada(grafo:Grafo):
             grados[w] += 1
     return grados
 
-def grados_salida(grafo:Grafo):
+def grados_salida(grafo, lecturas = None): 
     grados = {}
-    for v in grafo.obtener_vertices():
-        grados[v] = 0
-    for v in grafo.obtener_vertices():
-        for w in grafo.adyacentes(v):
-            grados[w] = grados[v] + 1
+    if lecturas:
+        for v in lecturas:
+            grados[v] = 0
+            for w in grafo.adyacentes(v):
+                if w in lecturas:
+                    grados[v]+=1
+    else:
+        for v in grafo.obtener_vertices():
+            grados[v] = 0
+            for w in grafo.adyacentes(v):
+                grados[v]+=1
     return grados
 
 
@@ -33,7 +39,7 @@ def reconstruir_camino(padres, origen,destino):
     return camino[::-1] 
 
 
-def bfs(grafo: Grafo,origen):
+def bfs(grafo: Grafo,origen,destino = None):
     visitados = set()
     cola = deque()
     padres = {origen : None}
@@ -47,10 +53,13 @@ def bfs(grafo: Grafo,origen):
                 padres[w] = v
                 orden[w] = orden[v] + 1
                 visitados.add(w)
-                cola.append(w)        
+                cola.append(w)  
+                if destino and w == destino:
+                    return padres,orden      
     return padres, orden
-
+ 
 def orden_topologico(grafo:Grafo):
+
     g_ent = grados_entrada(grafo)
     cola = deque()
     for v in grafo:
@@ -66,22 +75,13 @@ def orden_topologico(grafo:Grafo):
                 cola.append(w)
     return orden    
 
-def camino_min_dfs(grafo: Grafo, origen, destino):
-    visitados =set(origen)
-    padres = {origen:None}
-    padres = dfs_aux(grafo,origen,destino,visitados,padres)
-    camino = reconstruir_camino(padres)
 
-    return camino
-
-
-def dfs_aux(grafo : Grafo, origen,destino, visitados, padres):
-    if origen == destino:
-        return padres
-    for w in grafo.adyacentes(origen):
-        if w not in visitados:
-            visitados.add(w)
-            dfs_aux(grafo,w,destino,visitados,padres)
+def camino_min(grafo:Grafo,origen,destino):
+    padres,orden= bfs(grafo,origen,destino)
+    if not destino in orden:
+        return None
+    
+    return reconstruir_camino(padres, origen, destino)
 
 
 def cfcs_grafo(grafo:Grafo,v):
@@ -116,8 +116,6 @@ def dfc_cfcs(grafo : Grafo,v, visitados,orden,mas_bajo,pila:deque,apilados,cfcs,
                 break
         cfcs.append(nueva_cfc)
 
-
-
 def max_freq(entradas,labels):
     frecuencias = {}
     for v in entradas:
@@ -129,7 +127,7 @@ def max_freq(entradas,labels):
 def label_propagation(grafo: Grafo):
     Label = {}
     comunidades = {}
-    entradas = obtener_entaradas_vertice(grafo)
+    entradas = obtener_entradas_vertice(grafo)
     i = 0
     
     for v in grafo.vertices:
@@ -138,7 +136,7 @@ def label_propagation(grafo: Grafo):
         Label[v] = i
         i+=1
 
-    for _ in range(i):
+    for _ in range(1000):
         vertices = grafo.obtener_vertices()
         random.shuffle(vertices)
         for v in vertices:
@@ -149,7 +147,6 @@ def label_propagation(grafo: Grafo):
             else:
                 frecuencias_max = max_freq(entradasV, Label) 
 
-            
             etiqueta = Label[v]
             comunidades[etiqueta].remove(v)
             
@@ -159,15 +156,11 @@ def label_propagation(grafo: Grafo):
 
     return comunidades
 
-def pagerank(grafo : Grafo,tol=1.0e-6):
-    N = len(grafo.obtener_vertices())
-    page_rank = {}
-    g_sal = grados_salida(grafo)
+def pagerank(grafo : Grafo,N,page_rank,g_sal,tol=1.0e-6):
+    
     aux = {}
     sumas = {}
-
     for v in grafo.obtener_vertices():
-        page_rank[v] = 1/N
         sumas[v]=0
 
     for v in grafo.obtener_vertices():
@@ -177,19 +170,22 @@ def pagerank(grafo : Grafo,tol=1.0e-6):
             aux[v]= pr_v/L
         else:
             aux[v] = 0
-     
+        
     for v in grafo.obtener_vertices():
         for w in grafo.adyacentes(v):
             sumas[w] += aux[v]
-    
+    corte = False
     for v in grafo.obtener_vertices():
+
         pr_v =  (1-DAMPING_FACTOR)/N + (DAMPING_FACTOR * sumas[v])
         if abs(pr_v - page_rank[v]) > tol:
             page_rank[v] = pr_v
-       
-    return page_rank
+            corte = True
+        
+    return corte
+   
     
-def obtener_entaradas_vertice(grafo:Grafo):
+def obtener_entradas_vertice(grafo:Grafo):
     entradas = {}
     for v in grafo.obtener_vertices():
         entradas[v] = set()
@@ -197,5 +193,39 @@ def obtener_entaradas_vertice(grafo:Grafo):
         for w in grafo.adyacentes(v):
             entradas[w].add(v)
             
-
     return entradas
+
+def obtener_entradas_vertice_lect(grafo:Grafo,lecturas):
+    entradas = {}
+    for v in lecturas:
+        entradas[v] = set()
+    for v in lecturas:   
+        for w in grafo.adyacentes(v):
+            if w in lecturas:
+                entradas[w].add(v)
+            
+    return entradas
+
+def dfs_ciclos(grafo: Grafo, visitados,v,pagina,res,n):
+
+    if len(res)==n:
+        if v ==pagina:
+            res.append(v)
+            return res
+        return None
+    
+    if v == pagina and len(res) != 0:
+        return None
+    
+    visitados.add(v)
+    res.append(v)
+    
+    for w in grafo.adyacentes(v):
+        if w not in visitados or w == pagina:
+            resp = dfs_ciclos(grafo,visitados,w,pagina,res,n)
+            if resp:
+                return resp
+            
+    res.pop()
+    visitados.remove(v)
+    return None

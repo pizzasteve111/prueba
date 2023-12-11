@@ -2,22 +2,26 @@
 
 import sys
 from netstats import *
+COMANDOS = ["camino","mas_importantes","conectados","ciclo","lectura","diametro","rango","comunidad","navegacion","clustering"]
 
 def main(grafo):
-    
     for linea in sys.stdin:
         comando_parametros = linea.rstrip()
         comando = comando_parametros.split(" ")[0]
         parametros = " ".join(comando_parametros.split(" ")[1:]).split(",")
 
-        if comando == "camino":
+        if comando=="listar_operaciones":
+            for com in COMANDOS:
+                print(com)
+          
+        elif comando == "camino":
             origen,destino = parametros[0],parametros[1]
-            road,distancia = camino(grafo,origen,destino)
-            if distancia == 0:
+            road = camino(grafo,origen,destino)
+            if road == None:
                 print("No se encontro recorrido")
             else:
                 print(" -> ".join(road))
-                print("Costo: ",distancia)
+                print("Costo: ",len(road)-1)
         
         elif comando == "mas_importantes":
             n = int(parametros[0])
@@ -32,11 +36,11 @@ def main(grafo):
 
         elif comando == "ciclo":
             pagina, n = parametros[0], parametros[1]
-            ciclo = ciclos(grafo,n,pagina)
-            if ciclo :
-                print(" -> ".join(ciclo))  
+            ciclo = ciclos(grafo,int(n),pagina)
+            if not ciclo :
+                print("no se encontro ningun ciclo")  
             else:
-                print("no se encontro ningun ciclo")
+                print(" -> ".join(ciclo))
 
         elif comando == "lectura":
             lista_lec = lectura(grafo,parametros)
